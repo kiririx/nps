@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ehang.io/nps/lib/conn"
 	"flag"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"ehang.io/nps/lib/file"
 	"ehang.io/nps/lib/install"
@@ -189,7 +191,24 @@ func (p *nps) run() error {
 	return nil
 }
 
+func SetupBlackIP() {
+	for {
+		<-time.After(time.Hour * 1)
+		conn.IpC.Range(func(key, value interface{}) bool {
+			ip := key.(string)
+			count := value.(int64)
+			if count > 500 {
+				conn.BlackIp[ip] = true
+			} else {
+				conn.IpC.Store(ip, int64(0))
+			}
+			return true
+		})
+	}
+}
+
 func run() {
+	go SetupBlackIP()
 	routers.Init()
 	task := &file.Tunnel{
 		Mode: "webServer",
@@ -201,7 +220,7 @@ func run() {
 	}
 	logs.Info("the version of server is %s ,allow client core version to be %s", version.VERSION, version.GetVersion())
 	connection.InitConnectionService()
-	//crypt.InitTls(filepath.Join(common.GetRunPath(), "conf", "server.pem"), filepath.Join(common.GetRunPath(), "conf", "server.key"))
+	// crypt.InitTls(filepath.Join(common.GetRunPath(), "conf", "server.pem"), filepath.Join(common.GetRunPath(), "conf", "server.key"))
 	crypt.InitTls()
 	tool.InitAllowPort()
 	tool.StartSystemInfo()
