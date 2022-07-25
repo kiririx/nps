@@ -193,11 +193,11 @@ func (p *nps) run() error {
 
 func SetupBlackIP() {
 	for {
-		<-time.After(time.Hour * 1)
+		<-time.After(time.Minute * 5)
 		conn.IpC.Range(func(key, value interface{}) bool {
 			ip := key.(string)
 			count := value.(int64)
-			if count > 500 {
+			if count > 10 {
 				conn.BlackIp[ip] = true
 			} else {
 				conn.IpC.Store(ip, int64(0))
