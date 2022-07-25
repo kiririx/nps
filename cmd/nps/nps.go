@@ -3,7 +3,9 @@ package main
 import (
 	"ehang.io/nps/lib/conn"
 	"flag"
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -229,4 +231,19 @@ func run() {
 		timeout = 60
 	}
 	go server.StartNewServer(bridgePort, task, beego.AppConfig.String("bridge_type"), timeout)
+	go func() {
+		http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+			s := make(map[string]interface{})
+			s["black_list"] = conn.BlackIp
+			s["ip_conut"] = make(map[string]int)
+			conn.IpC.Range(func(key, value interface{}) bool {
+				s["ip_conut"].(map[string]int)[key.(string)] = value.(int)
+				return true
+			})
+			writer.Write([]byte(fmt.Sprintf("%v", s)))
+		})
+		if err := http.ListenAndServe(":8089", nil); err != nil {
+			logs.Error("ListenAndServe: ", err)
+		}
+	}()
 }
