@@ -210,7 +210,7 @@ func SetupBlackIP() {
 }
 
 func run() {
-	go SetupBlackIP()
+	// go SetupBlackIP()
 	routers.Init()
 	task := &file.Tunnel{
 		Mode: "webServer",
